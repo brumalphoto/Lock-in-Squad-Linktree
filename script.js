@@ -108,15 +108,31 @@ document.addEventListener('DOMContentLoaded', function () {
   function initSnow() {
     const c = document.getElementById('snow-canvas');
     const ctx = c.getContext('2d');
-    let w = c.width = window.innerWidth,
-        h = c.height = window.innerHeight;
 
-    const flakes = new Array(100).fill().map(() => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 3 + 1,
-      d: Math.random() + 0.7
-    }));
+    let flakes = [];
+    let w, h, dpr;
+
+    function resizeCanvas() {
+      dpr = window.devicePixelRatio || 1;
+      w = window.innerWidth;
+      h = window.innerHeight;
+
+      // Set canvas size in *real* pixels
+      c.width = w * dpr;
+      c.height = h * dpr;
+
+      // Reset transform before scaling (important if resized multiple times)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+
+      // Reset flakes on resize
+      flakes = new Array(100).fill().map(() => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 3 + 1,
+        d: Math.random() + 0.7
+      }));
+    }
 
     function draw() {
       ctx.clearRect(0, 0, w, h);
@@ -146,11 +162,9 @@ document.addEventListener('DOMContentLoaded', function () {
       requestAnimationFrame(loop);
     }
 
-    window.addEventListener('resize', () => {
-      w = c.width = window.innerWidth;
-      h = c.height = window.innerHeight;
-    });
-
+    // Init
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
     loop();
   }
 });
@@ -218,3 +232,4 @@ document.getElementById("intro-screen").addEventListener("click", () => {
     console.log("Music playback failed:", err);
   });
 });
+
