@@ -204,10 +204,17 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 document.addEventListener('mousemove', (e) => {
+  const x = e.clientX;
+  const y = e.clientY;
+
+  // Adjust for DPR scaling
+  const adjX = x;
+  const adjY = y;
+
   for (let i = 0; i < 3; i++) {
     trail.push({
-      x: e.clientX,
-      y: e.clientY,
+      x: adjX,
+      y: adjY,
       radius: Math.random() * 3 + 1,
       color: colors[Math.floor(Math.random() * colors.length)],
       alpha: 1,
@@ -255,6 +262,7 @@ document.getElementById("intro-screen").addEventListener("click", () => {
     console.log("Music playback failed:", err);
   });
 });
+
 
 
 
