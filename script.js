@@ -182,27 +182,33 @@ function draw() {
 const canvas = document.getElementById('trail-canvas');
 const ctx = canvas.getContext('2d');
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-canvas.width = width;
-canvas.height = height;
+let width, height, dpr;
+const trail = [];
+const colors = ['#E0BBE4', '#957DAD', '#D291BC', '#F3C5FF', '#FFFFFF'];
 
-window.addEventListener('resize', () => {
+function resizeCanvas() {
+  dpr = window.devicePixelRatio || 1;
   width = window.innerWidth;
   height = window.innerHeight;
-  canvas.width = width;
-  canvas.height = height;
-});
 
-const colors = ['#E0BBE4', '#957DAD', '#D291BC', '#F3C5FF', '#FFFFFF'];
-const trail = [];
+  // Real pixel size
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+
+  // Reset transform before scaling
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 document.addEventListener('mousemove', (e) => {
   for (let i = 0; i < 3; i++) {
     trail.push({
       x: e.clientX,
       y: e.clientY,
-      radius: Math.random() * 2 + 1,
+      radius: Math.random() * 3 + 1,
       color: colors[Math.floor(Math.random() * colors.length)],
       alpha: 1,
       dx: (Math.random() - 0.5) * 2,
@@ -213,23 +219,31 @@ document.addEventListener('mousemove', (e) => {
 
 function animate() {
   ctx.clearRect(0, 0, width, height);
+
   for (let i = 0; i < trail.length; i++) {
     const p = trail[i];
+
+    // Gradient glow for each petal
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+    gradient.addColorStop(0, `rgba(255,255,255,${p.alpha})`);
+    gradient.addColorStop(1, p.color + '00'); // fade out to transparent
+
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-    ctx.fillStyle = p.color;
-    ctx.globalAlpha = p.alpha;
     ctx.fill();
-    ctx.closePath();
+
+    // Movement
     p.x += p.dx;
     p.y += p.dy;
     p.alpha -= 0.02;
+
     if (p.alpha <= 0) {
       trail.splice(i, 1);
       i--;
     }
   }
-  ctx.globalAlpha = 1;
+
   requestAnimationFrame(animate);
 }
 animate();
@@ -241,5 +255,6 @@ document.getElementById("intro-screen").addEventListener("click", () => {
     console.log("Music playback failed:", err);
   });
 });
+
 
 
