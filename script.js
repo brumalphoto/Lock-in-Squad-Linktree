@@ -134,18 +134,27 @@ document.addEventListener('DOMContentLoaded', function () {
       }));
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      ctx.beginPath();
-      flakes.forEach(f => {
-        ctx.moveTo(f.x, f.y);
-        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      });
-      ctx.fill();
-      move();
-    }
+function draw() {
+  ctx.clearRect(0, 0, w, h);
+  flakes.forEach(f => {
+    // Pick a random brightness (opacity) for this flake
+    const alpha = 0.3 + Math.random() * 0.7;
 
+    // Create gradient for soft/glowy look
+    const gradient = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+    gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+    // Draw the flake
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  move();
+}
+      
     function move() {
       flakes.forEach(f => {
         f.y += f.d * f.d;
@@ -232,4 +241,5 @@ document.getElementById("intro-screen").addEventListener("click", () => {
     console.log("Music playback failed:", err);
   });
 });
+
 
