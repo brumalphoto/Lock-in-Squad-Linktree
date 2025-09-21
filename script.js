@@ -104,25 +104,28 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
   });
 
-  // ❄️ Snow animation
+  // Snow animation
   function initSnow() {
-    const snowCanvas = document.getElementById('snow-canvas');
-    const snowCtx = snowCanvas.getContext('2d');
+    const c = document.getElementById('snow-canvas');
+    const ctx = c.getContext('2d');
 
     let flakes = [];
     let w, h, dpr;
 
-    function resizeSnowCanvas() {
+    function resizeCanvas() {
       dpr = window.devicePixelRatio || 1;
       w = window.innerWidth;
       h = window.innerHeight;
 
-      snowCanvas.width = w * dpr;
-      snowCanvas.height = h * dpr;
+      // Set canvas size in *real* pixels
+      c.width = w * dpr;
+      c.height = h * dpr;
 
-      snowCtx.setTransform(1, 0, 0, 1, 0, 0);
-      snowCtx.scale(dpr, dpr);
+      // Reset transform before scaling (important if resized multiple times)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
 
+      // Reset flakes on resize
       flakes = new Array(100).fill().map(() => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -131,23 +134,39 @@ document.addEventListener('DOMContentLoaded', function () {
       }));
     }
 
-    function drawSnow() {
-      snowCtx.clearRect(0, 0, w, h);
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath();
       flakes.forEach(f => {
-        const alpha = 0.3 + Math.random() * 0.7;
-        const gradient = snowCtx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
-        gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
-        gradient.addColorStop(1, 'rgba(255,255,255,0)');
-
-        snowCtx.fillStyle = gradient;
-        snowCtx.beginPath();
-        snowCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-        snowCtx.fill();
+        ctx.moveTo(f.x, f.y);
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
       });
-      moveSnow();
+      ctx.fill();
+      move();
     }
+function draw() {
+  ctx.clearRect(0, 0, w, h);
+  flakes.forEach(f => {
+    // Pick a random brightness (opacity) for this flake
+    const alpha = 0.3 + Math.random() * 0.7;
 
-    function moveSnow() {
+    // Create gradient for soft/glowy look
+    const gradient = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+    gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+    // Draw the flake
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  move();
+}
+      
+    function move() {
       flakes.forEach(f => {
         f.y += f.d * f.d;
         f.x += Math.sin(f.y * 0.01);
@@ -158,89 +177,78 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
-    function loopSnow() {
-      drawSnow();
-      requestAnimationFrame(loopSnow);
+    function loop() {
+      draw();
+      requestAnimationFrame(loop);
     }
 
-    resizeSnowCanvas();
-    window.addEventListener('resize', resizeSnowCanvas);
-    loopSnow();
+    // Init
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    loop();
   }
+});
 
-  // 🌸 Mouse trail effect
-  const trailCanvas = document.getElementById('trail-canvas');
-  const trailCtx = trailCanvas.getContext('2d');
+// Mouse trail effect
+const canvas = document.getElementById('trail-canvas');
+const ctx = canvas.getContext('2d');
 
-  let width, height, dpr;
-  const trail = [];
-  const colors = ['#E0BBE4', '#957DAD', '#D291BC', '#F3C5FF', '#FFFFFF'];
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
 
-  function resizeTrailCanvas() {
-    dpr = window.devicePixelRatio || 1;
-    width = window.innerWidth;
-    height = window.innerHeight;
+window.addEventListener('resize', () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+});
 
-    trailCanvas.width = width * dpr;
-    trailCanvas.height = height * dpr;
+const colors = ['#E0BBE4', '#957DAD', '#D291BC', '#F3C5FF', '#FFFFFF'];
+const trail = [];
 
-    trailCtx.setTransform(1, 0, 0, 1, 0, 0);
-    trailCtx.scale(dpr, dpr);
-  }
-
-  resizeTrailCanvas();
-  window.addEventListener('resize', resizeTrailCanvas);
-
-  document.addEventListener('mousemove', (e) => {
-    const x = e.clientX;
-    const y = e.clientY;
-
-    for (let i = 0; i < 3; i++) {
-      trail.push({
-        x,
-        y,
-        radius: Math.random() * 3 + 1,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        alpha: 1,
-        dx: (Math.random() - 0.5) * 2,
-        dy: (Math.random() - 0.5) * 2,
-      });
-    }
-  });
-
-  function animateTrail() {
-    trailCtx.clearRect(0, 0, width, height);
-
-    for (let i = 0; i < trail.length; i++) {
-      const p = trail[i];
-      const gradient = trailCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-      gradient.addColorStop(0, `rgba(255,255,255,${p.alpha})`);
-      gradient.addColorStop(1, p.color + '00');
-
-      trailCtx.fillStyle = gradient;
-      trailCtx.beginPath();
-      trailCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      trailCtx.fill();
-
-      p.x += p.dx;
-      p.y += p.dy;
-      p.alpha -= 0.02;
-
-      if (p.alpha <= 0) {
-        trail.splice(i, 1);
-        i--;
-      }
-    }
-
-    requestAnimationFrame(animateTrail);
-  }
-  animateTrail();
-
-  // 🎵 Background music
-  document.getElementById("intro-screen").addEventListener("click", () => {
-    const music = document.getElementById("bg-music");
-    music.play().catch(err => {
-      console.log("Music playback failed:", err);
+document.addEventListener('mousemove', (e) => {
+  for (let i = 0; i < 3; i++) {
+    trail.push({
+      x: e.clientX,
+      y: e.clientY,
+      radius: Math.random() * 2 + 1,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1,
+      dx: (Math.random() - 0.5) * 2,
+      dy: (Math.random() - 0.5) * 2,
     });
+  }
+});
+
+function animate() {
+  ctx.clearRect(0, 0, width, height);
+  for (let i = 0; i < trail.length; i++) {
+    const p = trail[i];
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.alpha;
+    ctx.fill();
+    ctx.closePath();
+    p.x += p.dx;
+    p.y += p.dy;
+    p.alpha -= 0.02;
+    if (p.alpha <= 0) {
+      trail.splice(i, 1);
+      i--;
+    }
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Background music on click
+document.getElementById("intro-screen").addEventListener("click", () => {
+  const music = document.getElementById("bg-music");
+  music.play().catch(err => {
+    console.log("Music playback failed:", err);
   });
 });
